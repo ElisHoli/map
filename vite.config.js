@@ -10,5 +10,5 @@ module.exports =  defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
-  publicDir: "/map/"
+  base: "/map/"
 })

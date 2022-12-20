@@ -18,3 +18,27 @@ p {
 .card.departures {
   margin-block: 16px;
 }
+
+.tram {
+  color: #780200;
+}
+
+.bus {
+  color: #0078a0;
+}
+
+.regBus {
+  color: #191919;
+}
+
+.metroA {
+  color: #4EB370;
+}
+
+.metroB {
+  color: #EEAD00;
+}
+
+.metroC {
+  color: #C10141;
+}

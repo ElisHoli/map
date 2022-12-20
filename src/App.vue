@@ -1,10 +1,3 @@
-<!--
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
-</script>
--->
-
 <script>
   import Departures from "@/components/Departures.vue";
   import axios from "axios";
@@ -34,7 +27,6 @@ import TheWelcome from './components/TheWelcome.vue'
     },
   };
 </script>
-
 <template>
   <header>
     <div class="wrapper">

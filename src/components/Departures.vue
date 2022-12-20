@@ -29,10 +29,8 @@ export default {
     this.now = time;
 
     //&minutesBefore=5
-
     let result = await axios.get("https://api.golemio.cz/v2/pid/departureboards?names=Slánská&minutesAfter=60&timeFrom=" + time + "&includeMetroTrains=true&mode=departures&order=real&filter=routeOnce&skip=canceled");
-    console.log("Departures")
-    console.log(result)
+    //console.log(result)
     this.list = result.data.departures
   },
   updated: function () {
@@ -44,7 +42,7 @@ export default {
             "Content-Type": "application/json",
           })
           .then(response => (
-              console.log(response),
+              //console.log(response),
                   this.list = response.data.departures))
     }, 5000)
   }

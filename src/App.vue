@@ -29,7 +29,7 @@ import TheWelcome from './components/TheWelcome.vue'
       const access_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImVsaXNrYWhvbHpAc2V6bmFtLmN6IiwiaWQiOjE1ODYsIm5hbWUiOm51bGwsInN1cm5hbWUiOm51bGwsImlhdCI6MTY3MTQ1OTU4MCwiZXhwIjoxMTY3MTQ1OTU4MCwiaXNzIjoiZ29sZW1pbyIsImp0aSI6ImY3Y2Q0NmJlLWIyYTEtNDFiOS1hZmVlLTczYzgyZTRlMWM5OSJ9.LoMdVi-3_j_a3VjgS_1woumj0byOw9j3q8FWkaPS608"
       axios.defaults.headers.common['x-access-token'] = `${access_token}`
       let result = await axios.get("https://api.golemio.cz/v2/vehiclepositions?limit=1000&offset=0");
-      console.log(result);
+      //console.log(result);
       this.list = result.data.features;
     },
   };

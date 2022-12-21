@@ -4,24 +4,29 @@ import dayjs from "dayjs";
 import "dayjs/plugin/relativeTime"
 
 const apikey = import.meta.env.VITE_API_KEY;
+axios.defaults.headers.common['x-access-token'] = `${apikey}`
 
 export default {
   name: "Departures",
   methods: {
     getFormValues() {
-      if (this.$refs.stop.value !== '' && this.$refs.time.value !== '') {
+      console.log(dayjs(this.$refs.time.value).format('YYYY-MM-DD HH:mm') >= this.$refs.time.min)
+      console.log(dayjs(this.$refs.time.value).format('YYYY-MM-DD HH:mm'))
+      console.log(this.$refs.time.min)
+      if ((this.$refs.stop.value !== '' || this.$refs.stop.value !== '-- Vyberte zastávku --') && this.$refs.time.value !== '' && dayjs(this.$refs.time.value).format('YYYY-MM-DD HH:mm') >= this.$refs.time.min) {
         this.departuresForm['stop'] = this.$refs.stop.value
         this.departuresForm['time'] = this.$refs.time.value
 
         this.$refs.stop.style = "border-color: #ced4da"
         this.$refs.time.style = "border-color: #ced4da"
       } else {
-        if (this.$refs.stop.value === '') {
+        //TODO: přidat hlášky
+        if (this.$refs.stop.value === '' || this.$refs.stop.value === '-- Vyberte zastávku --') {
           this.$refs.stop.style = "border-color: #dc3545"
         } else {
           this.$refs.stop.style = "border-color: #ced4da"
         }
-        if (this.$refs.time.value === '') {
+        if (this.$refs.time.value === '' || dayjs(this.$refs.time.value).format('YYYY-MM-DD HH:mm') < this.$refs.time.min) {
           this.$refs.time.style = "border-color: #dc3545"
         } else {
           this.$refs.time.style = "border-color: #ced4da"
@@ -61,14 +66,30 @@ export default {
     return {
       errors: [],
       list: [],
-      now: '',
-      vehicle: '',
+      minTime: dayjs((new Date()).setHours((new Date()).getHours() - 7)).format('YYYY-MM-DD HH:mm'),
+      vehiclesType: [],
       departuresForm: {stop: 'Slánská', time: dayjs().format('YYYY-MM-DD HH:mm')},
+      stops: []
     };
   },
-  created() {
-    axios.defaults.headers.common['x-access-token'] = `${apikey}`
+  mounted() {
+    axios
+        .get('./stops.json')
+        .then(response => {
+          this.stops = response.data.stopGroups,
+              console.log(response.data.stopGroups)
+        })
 
+    /*fetch("http://data.pid.cz/stops/json/stops.json",{mode: 'no-cors'})
+        .then(response => response.json())
+        .then(data => (this.stops = data.stopGroups));*/
+    /*axios
+        .get("http://data.pid.cz/stops/json/stops.json",{withCredentials: false})
+        .then(response => {
+          this.stops = data.stopGroups
+            });*/
+  },
+  created() {
     const onNewData = () => {
       axios
           .get("https://api.golemio.cz/v2/pid/departureboards?names=" + this.departuresForm['stop'] + "&minutesBefore=1&minutesAfter=60&timeFrom=" + this.departuresForm['time'] + "&includeMetroTrains=true&mode=departures&order=real&filter=routeOnce&skip=canceled", {
@@ -86,13 +107,17 @@ export default {
 <template>
   <div id="departuresForm">
     <form>
-      <div class="row">
+      <div class="row align-items-center">
         <div class="col-12 col-md-5 form-floating">
-          <input type="text" class="form-control" id="stop" placeholder="Zastávka" ref="stop" value="Slánská" required>
+<!--          <input type="text" class="form-control" id="stop" placeholder="Zastávka" ref="stop" value="Slánská" required>-->
+          <select class="form-select" id="stop" ref="stop" placeholder="Zastávka" required>
+            <option selected disabled>-- Vyberte zastávku --</option>
+            <option v-for="item in stops">{{ item.name }}</option>
+          </select>
           <label for="stop">Odkud</label>
         </div>
         <div class="col-12 col-md-5 form-floating">
-          <input type="datetime-local" class="form-control" id="time" placeholder="Odjezd" ref="time" required>
+          <input type="datetime-local" class="form-control" id="time" placeholder="Odjezd" ref="time" :min="this.minTime" required>
           <label for="time">Kdy</label>
         </div>
         <div class="col-12 col-md-2">
@@ -103,15 +128,21 @@ export default {
     <h2>Odjezdy <strong>{{formatDate(departuresForm['time']) === formatDate(new Date()) ? 'v ' + formatTime(departuresForm['time']) : formatDateTime(departuresForm['time'])}}</strong> ze zastávky <strong>{{ departuresForm['stop'] }} </strong></h2>
   </div>
   <div class="card departures" v-for="item in list" :key="item.id">
-    <div class="card-header">
+    <div class="card-header" :class="!isBefore(time, item.departure_timestamp.predicted) ? ' left ' : ''">
       <div class="row">
-        <!-- TODO: opravit časy -->
-        <div class="col-6" v-if="isBefore(time, item.departure_timestamp.predicted)">
+        <div class="col-6" v-if="isBefore(time, item.departure_timestamp.predicted) && formatDate(departuresForm['time']) === formatDate(new Date())">
           za {{ formatMins(countTime(time, item.departure_timestamp.predicted)) }} min <span
             v-if="item.delay.is_available && item.delay.minutes > 0">včetně zpoždění</span>
         </div>
-        <div class="col-6" v-else>
-          spoj odjel
+        <div class="col-6" v-else-if="isBefore(time, item.departure_timestamp.predicted) && formatDate(departuresForm['time']) !== formatDate(new Date())">
+          {{ formatDateTime(item.departure_timestamp.predicted) }} <span
+            v-if="item.delay.is_available && item.delay.minutes > 0">včetně zpoždění</span>
+        </div>
+        <div class="col-6" v-else-if="!isBefore(time, item.departure_timestamp.predicted) && formatDate(departuresForm['time']) === formatDate(new Date())">
+          spoj odjel v {{ formatTime(item.departure_timestamp.predicted) }}
+        </div>
+        <div class="col-6" v-else-if="!isBefore(time, item.departure_timestamp.predicted) && formatDate(departuresForm['time']) !== formatDate(new Date())">
+          spoj odjel {{ formatDateTime(item.departure_timestamp.predicted) }}
         </div>
         <div class="col-6 text-end">
           <span v-if="item.delay.is_available && item.delay.minutes === 0" class="badge bg-success">včas</span>
@@ -128,6 +159,10 @@ export default {
           <div class="col-8 col-md-9">{{ item.route.short_name }} <span
               class="text-black-50 ">směr {{ item.trip.headsign }}</span></div>
           <div class="col-4 col-md-3 text-end">{{ formatTime(item.departure_timestamp.scheduled) }}</div>
+          <div class="col-12 mt-2">
+            <img v-if="item.trip.is_wheelchair_accessible" src="/src/assets/img/wheelchair-on.svg" class="tripIcon" title="nízkopodlažní" alt="wheelchair">
+            <img v-if="item.trip.is_air_conditioned" src="/src/assets/img/air-on.svg" class="tripIcon" title="klimatizace pro cestující" alt="wheelchair">
+          </div>
         </div>
       </h5>
 
@@ -162,8 +197,20 @@ export default {
   font-size: 13px;
 }
 
+.card-header {
+  background-color: rgba(25, 135, 84, 15%);
+}
+
+.card-header.left {
+  background-color: rgba(0, 0, 0, 3%);
+}
+
 h2 {
   margin-top: 0.5rem !important;
+}
+
+.tripIcon {
+  max-height: 1.5em;
 }
 
 </style>

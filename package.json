@@ -16,7 +16,8 @@
     "dayjs": "^1.11.7",
     "npm-check-updates": "^16.6.0",
     "vue": "^3.2.45",
-    "webpack": "^5.75.0"
+    "webpack": "^5.75.0",
+    "font-awesome": "^4.7.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.0.0",

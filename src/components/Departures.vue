@@ -68,13 +68,22 @@ export default {
       list: [],
       minTime: dayjs((new Date()).setHours((new Date()).getHours() - 7)).format('YYYY-MM-DD HH:mm'),
       vehiclesType: [],
-      departuresForm: {stop: 'Slánská', time: dayjs().format('YYYY-MM-DD HH:mm')},
-      stops: []
+      departuresForm: {stop: 'Hlavní nádraží', time: dayjs().format('YYYY-MM-DD HH:mm')},
+      stops: [],
+      stop: []
     };
   },
   mounted() {
     axios
         .get('./stops.json')
+        .then(response => {
+          this.stops = response.data.stopGroups,
+              console.log(response.data.stopGroups)
+        })
+        .catch(error => console.error('Chyba při provádění dotazu:', error));
+
+    /*fetch("https://data.pid.cz/stops/json/stops.json",{mode: 'no-cors'})
+        // .then(response => response.json())
         .then(response => {
           this.stops = response.data.stopGroups,
               console.log(response.data.stopGroups)
@@ -96,10 +105,11 @@ export default {
             "Content-Type": "application/json",
           })
           .then(response => (
-              console.log(response),
-                  this.list = response.data.departures))
+              console.log(response.data.departures),
+                  this.list = response.data.departures));
+
     }
-    setInterval(onNewData, 1000)
+    setInterval(onNewData, 1000);
   }
 }
 </script>
@@ -110,7 +120,7 @@ export default {
       <div class="row align-items-center">
         <div class="col-12 col-md-5 form-floating">
 <!--          <input type="text" class="form-control" id="stop" placeholder="Zastávka" ref="stop" value="Slánská" required>-->
-          <select class="form-select" id="stop" ref="stop" placeholder="Zastávka" required>
+          <select class="form-select" id="stop" ref="stop" required>
             <option selected disabled>-- Vyberte zastávku --</option>
             <option v-for="item in stops">{{ item.name }}</option>
           </select>
@@ -155,13 +165,22 @@ export default {
     <div class="card-body">
       <h5 class="card-title">
         <div class="row">
-          <!-- TODO: typ vozidla (tram, bus, metro, ...)-->
-          <div class="col-8 col-md-9">{{ item.route.short_name }} <span
-              class="text-black-50 ">směr {{ item.trip.headsign }}</span></div>
+          <!-- TODO: ikonka typu vozidla - https://pid.cz/wp-content/uploads/system/Seznam_linek.pdf -->
+
+          <div class="col-8 col-md-9">
+            <img v-if="item.route.short_name === 'A' || item.route.short_name === 'B' || item.route.short_name === 'C'" src="/src/assets/img/line_types/metro.svg" class="lineType" title="metro" alt="metro">
+            <!--          <div v-else-if="(item.route.short_name >= 1 && item.route.short_name <= 26) || item.route.short_name >= 91 && item.route.short_name <= 99">Tram</div>-->
+            <img v-else-if="(item.route.short_name >= 1 && item.route.short_name <= 26) || item.route.short_name >= 91 && item.route.short_name <= 99" src="/src/assets/img/line_types/tram.svg" class="lineType" title="tram" alt="tram">
+            <img v-else-if="(item.route.short_name >= 100 && item.route.short_name <= 960) || item.route.short_name === 'H1' || item.route.short_name === 'AE' || item.route.short_name === 'CYK1' || item.route.short_name === 'CYK2'" src="/src/assets/img/line_types/bus.svg" class="lineType" title="bus" alt="bus">
+            <img v-else-if="item.route.short_name === 'P1' || item.route.short_name === 'P2' || item.route.short_name === 'P3' || item.route.short_name === 'P4' || item.route.short_name === 'P5' || item.route.short_name === 'P6'" src="/src/assets/img/line_types/ferry.svg" class="lineType" title="ferry" alt="ferry">
+            <div v-else-if="item.route.short_name === 'LD'">Lanovka</div>
+            <img v-else src="/src/assets/img/line_types/vlak.svg" class="lineType" title="vlak" alt="vlak">
+            {{ item.route.short_name }} <span
+              class="text-black-50">směr {{ item.trip.headsign }}</span></div>
           <div class="col-4 col-md-3 text-end">{{ formatTime(item.departure_timestamp.scheduled) }}</div>
           <div class="col-12 mt-2">
             <img v-if="item.trip.is_wheelchair_accessible" src="/src/assets/img/wheelchair-on.svg" class="tripIcon" title="nízkopodlažní" alt="wheelchair">
-            <img v-if="item.trip.is_air_conditioned" src="/src/assets/img/air-on.svg" class="tripIcon" title="klimatizace pro cestující" alt="wheelchair">
+            <img v-if="item.trip.is_air_conditioned" src="/src/assets/img/air-on.svg" class="tripIcon" title="klimatizace pro cestující" alt="airconditon">
           </div>
         </div>
       </h5>
@@ -211,6 +230,10 @@ h2 {
 
 .tripIcon {
   max-height: 1.5em;
+}
+
+.lineType {
+  height: 1em;
 }
 
 </style>

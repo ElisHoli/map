@@ -9,6 +9,10 @@ cd dist
 git init
 git add -A
 git commit -m 'New Deployment'
-git push -f git@github.com:ElisHoli/map.git main:gh-pages
+
+REMOTE_URL=$GIT_REMOTE_URL
+DEFAULT_BRANCH=$GIT_DEFAULT_BRANCH
+
+git push -f $REMOTE_URL $DEFAULT_BRANCH:gh-pages
 
 cd -

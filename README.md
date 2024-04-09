@@ -124,7 +124,7 @@ This command will handle both building the application and pushing changes to th
 #### Add folder dist and commit
 
 ```sh
-git add dist && git commit -m 'adding dist subtree'
+git add dist && git commit -m 'New Deployment'
 ```
 
 #### Remove remote branch and push changes

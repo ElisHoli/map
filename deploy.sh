@@ -4,6 +4,8 @@ set -e
 
 npm run build
 
+#cp stops.json dist/stops.json
+
 cd dist
 
 git init
